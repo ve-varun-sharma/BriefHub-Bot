@@ -29,17 +29,6 @@ async def on_member_join(member):
     await member.create_dm()
     await member.dm_channel.send(f'Hi {member.name}, welcome to my Discord Server!')
 
-# @briefbot.event
-# async def on_ready():
-#     for guild in briefbot.guilds:
-#         if guild.name == GUILD:
-#             break
-#     print(
-#         f'{briefbot.user} is connected to the following guild: \n'
-#         f'{guild.name}(id: {guild.id)\n'
-#     )
-#     members = '\n - '.join([member.name for member in guild.members])
-#     print(f'Guild members: \n - {members}')
 
 @briefbot.event
 async def on_message(test_message):
@@ -92,12 +81,13 @@ async def whatis(ctx, *, search_term):
 
 @briefbot.command(search_words=['everythingabout','tellmeeverything','fullsend'])
 async def everythingabout(ctx, *, search_term):
-    brainbot = wikipedia.summary(search_term, auto_suggest=False, redirect=False, sentences=10)
+    brainbot = wikipedia.summary(search_term, auto_suggest=False, redirect=False, sentences=15)
     await ctx.channel.send(f"Success! 🚀 I have found results/nHere is what I found for '{search_term}':{nl}{brainbot}")
     if  wikipedia.exceptions.PageError(pageid=None) == True:
         await ctx.channel.send(f"Hmm, it doesn't look I found anything for '{search_term}'./nhere are some alternative suggestions: {wikipedia.search(search_term, results=10, suggestion=False)} ")
     if  wikipedia.exceptions.PageError(pageid=None) == True or wikipedia.exceptions.DisambiguationError == True:
         await ctx.channel.send(f"Hmm, it still doesn't look I found anything for '{search_term}'. {nl}Here is what recovered: {(wikipedia.exceptions.DisambiguationError.options)}")
+
 
 @briefbot.command()
 async def whois(ctx, *args):
@@ -119,6 +109,7 @@ async def whois(ctx, *args):
 async def ping(ctx):
     await ctx.send(f'pong! {round(briefbot.latency * 1000)}ms')
 
+# 8ball command gives a randomized answer from the 8ball answer list
 @briefbot.command(aliases=['8ball', 'eightball'])
 async def _8ball(ctx, *, question):
     responses = [
@@ -188,12 +179,42 @@ async def printthis(ctx, *args):
         response = response +  " " + arg
     await ctx.channel.send(response)
 
+from alpha_vantage.timeseries import TimeSeries
+import matplotlib.pyplot as plt
+
+@briefbot.command()
+async def stocknews (ctx, arg):
+    ts = TimeSeries(key='BYMSO9FUQY633Q7W', output_format='pandas')
+    data = ts.get_intraday(symbol= arg, interval='1min', outputsize='full')
+    data['close'].plot()
+    print(plt.title(f'Intraday Times Series for the {arg} stock (1 min)'))
+    print(plt.show())
+    await ctx.channel.send(plt.show)
+
+import requests
+import json
+@briefbot.command()
+async def showmethemonney (ctx, arg):
+    arg = ticker
+    key = 'BYMSO9FUQY633Q7W'
+    url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={}&apikey={}'.format(ticker, key)
+    await ctx.channel.send(url)
+
+
 # Briefbot Help command list
 @briefbot.command(help_words=['help', 'assistance', 'help!'])
 async def bot_help(ctx):
     help_message = '\r\n'.join(['$help: Returns all of the commands and what they do.',
                         '$ping: Returns the ping latency from the server',
-                        '$get: Returns web scraping results for specific information'])
+                        '$get: Returns web scraping results for specific information',
+                        "$sendemail: Sends an instal email. Quote the receiver address, and quote the message.",
+                        "$printthis: Simply echos the message you typed",
+                        "$scrape: Enter any URL and headtitles from the link and it will return summary information",
+                        "$stocknews: Enter a Stock Ticker symbol and this returns daily adjusted stock info",
+                        "$8ball: Ask any question and it will return 8 ball classic answers",
+                        "$whatis: Returns brief information about anything. Answers retrieved from Wikipedia.",
+                        "$everythingabout: Returns more information than $whatis",
+                        "$about: Returns randomized general information about BriefHub Bot"])
     await ctx.channel.send(help_message)
 
 # Briefbot tells the user a small summary about itself
@@ -201,9 +222,11 @@ async def bot_help(ctx):
 async def about(ctx):
     about_responses = [
                 "Hey there! I'm BriefBot, your personal assistant on Discord. Please let me know how I can help you!.",
-                "I am BriefBot from BriefHub. I am here to help optimize your productivity and spice up your workflow!."]
+                "I am BriefBot from BriefHub. I am here to help optimize your productivity and spice up your workflow!.",
+                "Hello there, I'm an AMA Bot. Ask me anything! (Hint, enter: $bot_help)"]
     await ctx.send(f'{random.choice(about_responses)}')
 
+# Discord command error function that returns the appropiate errors and exceptions for cases
 async def on_command_error(self, ctx, exception):
         self.stats.increment("RPGBot.errors", tags=["RPGBot:errors"], host="scw-8112e8")
         logging.info(f"Exception in {ctx.command} {ctx.guild}:{ctx.channel} {exception}")
