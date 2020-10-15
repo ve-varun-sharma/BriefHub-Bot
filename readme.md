@@ -1,4 +1,4 @@
-# BriefHub Bot
+# 🚀 BriefHub Bot 🤖
 
 BriefHub Bot is an AMA (Ask Me Anything) bot. He helps manages the BriefHub Discord Server and spices up your workflow!
 He is connected to various APIs such as Wikipedia, Alpha Stocks, etc, to fetch any information you need. He can scrape information from any website. He can also send emails without you having to sign in or open a new window. 
